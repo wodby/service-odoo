@@ -2,16 +2,15 @@
 
 What Wodby sets up for Odoo Community Edition on this service.
 
-## Image and code
+## Image
 
-The image is `wodby/odoo`: Odoo's official image (Ubuntu, Odoo's Debian package, the patched wkhtmltopdf for PDF
-reports) running as the `wodby` user (uid 1000). Odoo itself is part of the image; the repository holds only the
-modules added to it.
+The service runs the prebuilt `wodby/odoo` image, with nothing built for it: Odoo's official image (Ubuntu, Odoo's
+Debian package, the patched wkhtmltopdf for PDF reports) running as the `wodby` user (uid 1000). Every Community app
+ships in the image and is installed from Odoo's Apps menu.
 
-The repository is copied to `/usr/src/app` and its `requirements.txt` is installed with pip. Every directory up to three
-levels deep that contains modules (directories with `__manifest__.py`) is added to Odoo's addons path, so modules can
-sit at the root, in `addons/`, or in Git submodules such as OCA repositories. `ODOO_ADDONS_PATH` replaces the
-discovery.
+Custom or community modules need an image of their own built `FROM wodby/odoo:<version>` with the modules copied to
+`/usr/src/app`: every directory up to three levels deep there that contains modules is added to the addons path. Use
+it from a custom service based on this one.
 
 ## Configuration
 
@@ -39,11 +38,11 @@ After every deployment the **Install or update Odoo** action (`odoo-update`) run
 - **First deployment:** installs `base` and the `init-modules` setting's apps into the empty database, without demo
   data. The administrator gets the `admin-login` (default `admin`), `admin-password` (required) and `admin-email`
   settings; the `language` setting is loaded and given to the administrator. The company is named after the app.
-  `web.base.url` is set to the app's main address.
+  `web.base.url` is set to the app's main address (`WODBY_PRIMARY_URL`, passed with `routeMetadata`).
 - Without an admin password the action fails and nothing is installed.
-- **Later deployments:** updates installed modules whose manifest `version` went up, and installed modules of the
-  repository whose files changed (except `static/` and `tests/`). Checksums are kept in the database
-  (`wodby.module_checksums`). New modules are added to the Apps list but not installed.
+- **Later deployments:** updates installed modules whose manifest `version` went up, for example after a new image, and
+  installed modules under `/usr/src/app` whose files changed (except `static/` and `tests/`). Checksums are kept in the
+  database (`wodby.module_checksums`). New modules are added to the Apps list but not installed.
 - A database where an earlier installation stopped halfway is never installed over: the action fails.
 - Changing the admin settings after the first deployment does not change the account; change it in Odoo.
 
@@ -52,7 +51,7 @@ changed core modules without raising their versions.
 
 ## Limits
 
-- Community Edition only. Enterprise modules can be added to the repository by subscribers.
+- Community Edition only. Custom and Enterprise modules need an image built on `wodby/odoo`.
 - Odoo 18 to 20; one database per service.
 - No development workspace.
 

@@ -1,6 +1,6 @@
 # Odoo service for Kubernetes on Wodby
 
-Build and run Odoo Community Edition on Kubernetes with Wodby.
+Run Odoo Community Edition on Kubernetes with Wodby.
 
 This repository defines the Wodby service manifests and operational
 configuration for Odoo.
@@ -8,13 +8,6 @@ configuration for Odoo.
 - [Browse Wodby services](https://wodby.com/services)
 - [Wodby service documentation](https://wodby.com/docs/2.0/services/)
 - [Service manifest reference](https://wodby.com/docs/2.0/services/template/)
-
-## Start with a boilerplate
-
-Use one of the boilerplates exposed by this service to start with compatible
-build configuration and Wodby CI:
-
-- [Odoo modules boilerplate](https://github.com/wodby/odoo-boilerplate)
 
 ## Wodby stacks using this service
 
@@ -26,13 +19,12 @@ build configuration and Wodby CI:
 | --- | --- |
 | Service name | `odoo` |
 | Type | Application service |
-| Image | [`wodby/odoo`](https://github.com/wodby/odoo) |
 | Versions | `20` by default, `19`, `18` |
 | Endpoints | `odoo`: `http` 8069 and `websocket` 8072, both private |
 | Service links | PostgreSQL, required; Odoo data storage, required; SMTP server |
 | Settings | Admin login, Admin password (required), Admin email, Language, Apps to install, Workers, Scheduled action workers |
 | Volumes | `filestore`, shared |
-| Application build | Git source connection enabled; Dockerfile: `Dockerfile`; boilerplates: Odoo modules boilerplate |
+| Image | Prebuilt [`wodby/odoo`](https://github.com/wodby/odoo), no build |
 | Operations | 2 actions |
 
 ## Use this service

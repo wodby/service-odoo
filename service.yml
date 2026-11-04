@@ -149,15 +149,6 @@ tokens:
   generate:
     regex: '[0-9a-zA-Z]{32}'
 
-build:
-  dockerfile: Dockerfile
-  connect: true
-  boilerplates:
-  - name: odoo
-    title: Odoo modules boilerplate
-    repo: https://github.com/wodby/odoo-boilerplate
-    branch: main
-
 actions:
 # Installs Odoo on the first deployment and updates the modules that changed
 # on later ones.
@@ -248,7 +239,9 @@ workloads:
   containers:
   - name: odoo
     image: wodby/odoo
-    build: true
+    # A prebuilt image, so Wodby passes the app's addresses only on request.
+    # The first deployment sets Odoo's web.base.url from WODBY_PRIMARY_URL.
+    routeMetadata: true
     resources:
       request:
         cpu: 200
@@ -260,5 +253,10 @@ workloads:
       resources: resources
       env: envVars
       mounts: extraVolumeMounts
+      image:
+        repository: image.repository
+        tag: image.tag
+        registry: image.registry
+        pullPolicy: image.pullPolicy
 
 workspace: false
