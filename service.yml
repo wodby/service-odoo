@@ -12,13 +12,13 @@ labels:
 options:
 - version: '20'
   default: true
-  tag: 20-r0
+  tag: 20-r1
   eol: '2029-10-01T00:00:00+00:00'
 - version: '19'
-  tag: 19-r0
+  tag: 19-r1
   eol: '2028-10-01T00:00:00+00:00'
 - version: '18'
-  tag: 18-r0
+  tag: 18-r1
   eol: '2027-10-01T00:00:00+00:00'
 
 # Both ports are private: the Odoo Nginx service is the public entry point and
