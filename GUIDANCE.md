@@ -17,7 +17,7 @@ it from a custom service based on this one.
 `/etc/odoo/odoo.conf` is rendered from environment variables on every start; never edit it in a running container.
 
 - **Database.** One database, from the `db` link: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`. Odoo serves
-  only that database (`db_name` and `dbfilter`), and the database manager is off (`list_db = False`), so databases are
+  only that database (`db_name`, with no `dbfilter`), and the database manager is off (`list_db = False`), so databases are
   never created, copied or dropped from the web. When the linked server has a CA certificate (`DB_SSL_CA`), Odoo
   connects with `verify-full` TLS. The database must be PostgreSQL.
 - **Data.** `data_dir` is `/mnt/files`, the `filestore` volume shared by every replica through the linked storage
