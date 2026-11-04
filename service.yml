@@ -1,0 +1,262 @@
+name: odoo
+type: service
+icon: odoo
+title: Odoo
+scalable: true
+guidance: GUIDANCE.md
+
+labels:
+- odoo
+
+# Odoo supports its three latest major versions.
+options:
+- version: '20'
+  default: true
+  tag: 20-r0
+  eol: '2029-10-01T00:00:00+00:00'
+- version: '19'
+  tag: 19-r0
+  eol: '2028-10-01T00:00:00+00:00'
+- version: '18'
+  tag: 18-r0
+  eol: '2027-10-01T00:00:00+00:00'
+
+# Both ports are private: the Odoo Nginx service is the public entry point and
+# sends live updates (/websocket) to the gevent port.
+endpoints:
+- name: odoo
+  ports:
+  - name: http
+    number: 8069
+    protocol: http
+    main: true
+    private: true
+  - name: websocket
+    number: 8072
+    protocol: http
+    private: true
+
+links:
+- name: db
+  title: PostgreSQL
+  required: true
+  # A managed database server's CA certificate, mounted when the server has one, so Odoo verifies it over TLS.
+  database:
+    ca:
+      filepath: /etc/wodby/db/ca.pem
+  env:
+  - name: DB_HOST
+    value: '{{link.database.host}}'
+  - name: DB_PORT
+    value: '{{link.database.port}}'
+  - name: DB_NAME
+    value: '{{link.database.db.name}}'
+  - name: DB_USER
+    value: '{{link.database.user.name}}'
+  - name: DB_PASSWORD
+    value: '{{link.database.user.password}}'
+    secret: true
+  # The path of the server's CA certificate when it has one, otherwise empty.
+  - name: DB_SSL_CA
+    value: '{{link.database.caFile}}'
+  selectors:
+  - type: db
+    labels:
+    - postgres
+- name: filestore
+  title: Odoo data storage
+  required: true
+  selectors:
+  - type: storage
+- name: sendmail
+  title: SMTP server
+  required: false
+  env:
+  - name: SMTP_HOST
+    value: '{{link.host}}'
+  - name: SMTP_PORT
+    value: '{{link.port}}'
+  selectors:
+  - type: service
+    labels:
+    - smtpd
+
+# Odoo's data directory: uploaded files (the filestore) and sessions. Every
+# replica reads and writes the same files, so the volume is shared.
+volumes:
+- name: filestore
+  title: Odoo data
+  link: filestore
+  shared: true
+  size: 10
+  path: /mnt/files
+  import:
+    owner: 1000
+    group: 1000
+
+settings:
+# The administrator the first deployment creates. Odoo is installed from these
+# values; its database manager is turned off.
+- name: admin-login
+  title: Admin login
+  description: Login of the Odoo administrator created on the first deployment.
+  default: admin
+  var: ODOO_ADMIN_LOGIN
+- name: admin-password
+  title: Admin password
+  description: Password of the Odoo administrator created on the first deployment. Change it in Odoo afterwards; this setting is not used again.
+  required: true
+  secret: true
+  var: ODOO_ADMIN_PASSWORD
+- name: admin-email
+  title: Admin email
+  description: Email address of the Odoo administrator.
+  var: ODOO_ADMIN_EMAIL
+- name: language
+  title: Language
+  description: Language installed on the first deployment and given to the administrator, such as fr_FR. English is always installed.
+  placeholder: fr_FR
+  var: ODOO_LANGUAGE
+- name: init-modules
+  title: Apps to install
+  description: Comma-separated technical names of apps installed on the first deployment, such as crm,sale_management. More can be installed from the Apps menu later.
+  placeholder: crm,sale_management
+  var: ODOO_INIT_MODULES
+- name: workers
+  title: Workers
+  description: Odoo worker processes per replica. Each handles one request at a time and can use up to 2.5 GB of memory. Keep at least 1, because live updates need a separate process.
+  default: '2'
+  var: ODOO_WORKERS
+- name: max-cron-threads
+  title: Scheduled action workers
+  description: Processes per replica that run scheduled actions, such as sending queued email.
+  default: '1'
+  var: ODOO_MAX_CRON_THREADS
+
+env:
+- name: ODOO_DATA_DIR
+  value: /mnt/files
+# The company's name on the first deployment; it can be changed in Odoo later.
+- name: ODOO_COMPANY_NAME
+  value: '{{app.title}}'
+# Password of Odoo's database manager, which stays turned off.
+- name: ODOO_MASTER_PASSWORD
+  value: '{{odoo_master_password}}'
+  secret: true
+
+tokens:
+- name: odoo_master_password
+  generate:
+    regex: '[0-9a-zA-Z]{32}'
+
+actions:
+# Installs Odoo on the first deployment and updates the modules that changed
+# on later ones.
+- name: update
+  title: Install or update Odoo
+  args:
+  - odoo-update
+  type: post_deploy
+- name: update_all
+  title: Update all modules
+  args:
+  - odoo-update
+  - all
+  type: button
+
+deployment:
+  strategy: rolling
+  maxUnavailable: 0
+  maxSurge: 1
+  minReady: 10s
+  progressDeadline: 15m
+  # Workers finish their current requests.
+  shutdownGracePeriod: 60s
+
+helm:
+  name: wodby
+  source: oci://registry-1.docker.io/wodby/stateless
+  chart: oci://registry-1.docker.io/wodby/stateless
+  version: 0.4.0
+  valueMappings:
+    replicas: replicaCount
+    serviceAccountName: serviceAccount.name
+    serviceAccountCreate: serviceAccount.create
+  values:
+  - name: containerName
+    value: odoo
+  - name: containerPorts
+    value:
+    - name: http
+      containerPort: 8069
+      protocol: TCP
+    - name: websocket
+      containerPort: 8072
+      protocol: TCP
+  - name: podSecurityContext
+    value:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+  # Odoo loads every installed module before it answers, which takes longer on
+  # the first start and with many apps.
+  - name: startupProbe
+    value:
+      httpGet:
+        path: /web/health
+        port: http
+      failureThreshold: 60
+      periodSeconds: 5
+      timeoutSeconds: 5
+  - name: readinessProbe
+    value:
+      httpGet:
+        path: /web/health
+        port: http
+      failureThreshold: 3
+      periodSeconds: 10
+      timeoutSeconds: 5
+  # Busy workers can delay the answer, so a restart needs two minutes of failures.
+  - name: livenessProbe
+    value:
+      httpGet:
+        path: /web/health
+        port: http
+      failureThreshold: 6
+      periodSeconds: 20
+      timeoutSeconds: 10
+
+workloads:
+- name: main
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: '{{helm.release}}'
+  kind: deployment
+  primary: true
+  helm:
+    labels: podLabels
+    annotations: podAnnotations
+    volumes: extraVolumes
+  containers:
+  - name: odoo
+    image: wodby/odoo
+    # A prebuilt image, so Wodby passes the app's addresses only on request.
+    # The first deployment sets Odoo's web.base.url from WODBY_PRIMARY_URL.
+    routeMetadata: true
+    resources:
+      request:
+        cpu: 200
+        memory: 1024
+      limit:
+        cpu: 2000
+        memory: 3072
+    helm:
+      resources: resources
+      env: envVars
+      mounts: extraVolumeMounts
+      image:
+        repository: image.repository
+        tag: image.tag
+        registry: image.registry
+        pullPolicy: image.pullPolicy
+
+workspace: false
