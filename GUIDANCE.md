@@ -33,17 +33,19 @@ it from a custom service based on this one.
 
 ## Installation and updates
 
-After every deployment the **Install or update Odoo** action (`odoo-update`) runs:
+Odoo can't serve an empty database, so the first start of the service installs Odoo before it answers (the startup
+probe allows 15 minutes). After every deployment the **Install or update Odoo** action (`odoo-update`) runs. Replicas
+and the action wait for each other, so Odoo is installed once.
 
 - **First deployment:** installs `base` and the `init-modules` setting's apps into the empty database, without demo
   data. The administrator gets the `admin-login` (default `admin`), `admin-password` (required) and `admin-email`
   settings; the `language` setting is loaded and given to the administrator. The company is named after the app.
   `web.base.url` is set to the app's main address (`WODBY_PRIMARY_URL`, passed with `routeMetadata`).
-- Without an admin password the action fails and nothing is installed.
+- Without an admin password the service doesn't start and nothing is installed.
 - **Later deployments:** updates installed modules whose manifest `version` went up, for example after a new image, and
   installed modules under `/usr/src/app` whose files changed (except `static/` and `tests/`). Checksums are kept in the
   database (`wodby.module_checksums`). New modules are added to the Apps list but not installed.
-- A database where an earlier installation stopped halfway is never installed over: the action fails.
+- A database where an earlier installation stopped halfway is never installed over: the service doesn't start.
 - Changing the admin settings after the first deployment does not change the account; change it in Odoo.
 
 The **Update all modules** button runs `odoo-update all` (`odoo -u all`), for example after an Odoo image update that
@@ -58,5 +60,5 @@ changed core modules without raising their versions.
 ## Check the result
 
 - `curl -s localhost:8069/web/health` in the container returns `{"status": "pass"}`.
-- The deployment's post-deploy log shows the install or update output.
+- The first start's container log shows the installation; the deployment's post-deploy log shows updates.
 - `odoo shell -d "$DB_NAME"` opens a Python shell in the container.

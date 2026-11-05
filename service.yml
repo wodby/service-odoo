@@ -12,13 +12,13 @@ labels:
 options:
 - version: '20'
   default: true
-  tag: 20-r1
+  tag: 20-r2
   eol: '2029-10-01T00:00:00+00:00'
 - version: '19'
-  tag: 19-r1
+  tag: 19-r2
   eol: '2028-10-01T00:00:00+00:00'
 - version: '18'
-  tag: 18-r1
+  tag: 18-r2
   eol: '2027-10-01T00:00:00+00:00'
 
 # Both ports are private: the Odoo Nginx service is the public entry point and
@@ -150,8 +150,8 @@ tokens:
     regex: '[0-9a-zA-Z]{32}'
 
 actions:
-# Installs Odoo on the first deployment and updates the modules that changed
-# on later ones.
+# Updates the modules that changed. Odoo's first start installs Odoo into the
+# empty database, so after the first deployment this finds nothing to do.
 - name: update
   title: Install or update Odoo
   args:
@@ -197,14 +197,15 @@ helm:
     value:
       fsGroup: 1000
       fsGroupChangePolicy: OnRootMismatch
-  # Odoo loads every installed module before it answers, which takes longer on
-  # the first start and with many apps.
+  # Odoo loads every installed module before it answers, which takes longer
+  # with many apps. The first start also installs Odoo, apps included, so it
+  # may take up to the deployment's 15-minute progress deadline.
   - name: startupProbe
     value:
       httpGet:
         path: /web/health
         port: http
-      failureThreshold: 60
+      failureThreshold: 180
       periodSeconds: 5
       timeoutSeconds: 5
   - name: readinessProbe
