@@ -12,13 +12,13 @@ labels:
 options:
 - version: '20'
   default: true
-  tag: 20-r2
+  tag: 20-r3
   eol: '2029-10-01T00:00:00+00:00'
 - version: '19'
-  tag: 19-r2
+  tag: 19-r3
   eol: '2028-10-01T00:00:00+00:00'
 - version: '18'
-  tag: 18-r2
+  tag: 18-r3
   eol: '2027-10-01T00:00:00+00:00'
 
 # Both ports are private: the Odoo Nginx service is the public entry point and
@@ -104,7 +104,8 @@ settings:
   var: ODOO_ADMIN_LOGIN
 - name: admin-password
   title: Admin password
-  description: Password of the Odoo administrator created on the first deployment. Change it in Odoo afterwards; this setting is not used again.
+  description: Password of the Odoo administrator created on the first 
+    deployment. Change it in Odoo afterwards; this setting is not used again.
   required: true
   secret: true
   var: ODOO_ADMIN_PASSWORD
@@ -114,22 +115,28 @@ settings:
   var: ODOO_ADMIN_EMAIL
 - name: language
   title: Language
-  description: Language installed on the first deployment and given to the administrator, such as fr_FR. English is always installed.
+  description: Language installed on the first deployment and given to the 
+    administrator, such as fr_FR. English is always installed.
   placeholder: fr_FR
   var: ODOO_LANGUAGE
 - name: init-modules
   title: Apps to install
-  description: Comma-separated technical names of apps installed on the first deployment, such as crm,sale_management. More can be installed from the Apps menu later.
+  description: Comma-separated technical names of apps installed on the first 
+    deployment, such as crm,sale_management. More can be installed from the Apps
+    menu later.
   placeholder: crm,sale_management
   var: ODOO_INIT_MODULES
 - name: workers
   title: Workers
-  description: Odoo worker processes per replica. Each handles one request at a time and can use up to 2.5 GB of memory. Keep at least 1, because live updates need a separate process.
+  description: Odoo worker processes per replica. Each handles one request at a 
+    time and can use up to 2.5 GB of memory. Keep at least 1, because live 
+    updates need a separate process.
   default: '2'
   var: ODOO_WORKERS
 - name: max-cron-threads
   title: Scheduled action workers
-  description: Processes per replica that run scheduled actions, such as sending queued email.
+  description: Processes per replica that run scheduled actions, such as sending
+    queued email.
   default: '1'
   var: ODOO_MAX_CRON_THREADS
 
