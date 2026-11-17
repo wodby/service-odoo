@@ -252,8 +252,8 @@ workloads:
     routeMetadata: true
     resources:
       request:
-        cpu: 200
-        memory: 1024
+        cpu: 10
+        memory: 176
       limit:
         cpu: 2000
         memory: 3072
