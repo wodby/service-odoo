@@ -12,16 +12,16 @@ labels:
 options:
 - version: '20'
   default: true
-  tag: 20-r4
-  digest: sha256:c3d6dce07b1ac9693335f3078000ff677ba67a1e056f7e2e0e217a764fbf0631
+  tag: 20-r5
+  digest: sha256:0ff6110258bf70f0ba3d7919dc9019e867deee0286f1c36597de487da6183c29
   eol: '2029-10-01T00:00:00+00:00'
 - version: '19'
-  tag: 19-r4
-  digest: sha256:0c7a01631970c40f475386ab4d24b88e1e2ccb7b710d1d94bb38fd11e2a699f9
+  tag: 19-r5
+  digest: sha256:b344a93d2eddf1a04e9f9391c2d591d5087eb482d1e6f1175d8e5cb19e52f567
   eol: '2028-10-01T00:00:00+00:00'
 - version: '18'
-  tag: 18-r4
-  digest: sha256:e9cd4a4b00b462000e34ae8113f9ffdd5874540f3729599f0789c04cf339bb54
+  tag: 18-r5
+  digest: sha256:a101b62f4df9ce3b27b91211947922df2e3821ca68fa5a2a6f8b4d019488c7ec
   eol: '2027-10-01T00:00:00+00:00'
 
 # Both ports are private: the Odoo Nginx service is the public entry point and
